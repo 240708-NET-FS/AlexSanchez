@@ -31,25 +31,25 @@ public class MenuService
                 CloseApplication();
                 break;
             case 1:
-                ViewAllRecords();
+                ShowAndReturnToMenu(ViewAllRecords);
                 break;
             case 2:
-                InsertDailyEntry();
+                ShowAndReturnToMenu(InsertDailyEntry);
                 break;
             case 3:
-                DeleteDailyEntry();
+                ShowAndReturnToMenu(DeleteDailyEntry);
                 break;
             case 4:
-                UpdateDailyEntry();
+                ShowAndReturnToMenu(UpdateDailyEntry);
                 break;
             case 5:
-                InsertHabit();
+                ShowAndReturnToMenu(InsertHabit);
                 break;
             case 6:
-                DeleteHabit();
+                ShowAndReturnToMenu(DeleteHabit);
                 break;
             case 7:
-                UpdateHabit();
+                ShowAndReturnToMenu(UpdateHabit);
                 break;
             default:
                 Console.WriteLine("Invalid action.");
@@ -63,21 +63,45 @@ public class MenuService
         Environment.Exit(0);
     }
 
+    public void ShowAndReturnToMenu(Action action)
+    {
+        Console.Clear();
+        action.Invoke();
+        Console.WriteLine("\nPress any key to return to the main menu...");
+        Console.ReadKey();
+        Console.Clear();
+    }
+
     public void ViewAllRecords()
     {
         var habits = _habitService.GetAll();
-        var dailyEntries = _dailyEntryService.GetAll();
 
-        Console.WriteLine("Habits:");
-        foreach (var habit in habits)
+        if (habits == null || habits.Count == 0)
         {
-            Console.WriteLine(habit);
+            Console.WriteLine("No habits found.");
+            return;
         }
 
-        Console.WriteLine("\nDaily Entries:");
-        foreach (var entry in dailyEntries)
+        Console.WriteLine("Habits and Daily Entries:");
+        foreach (var habit in habits)
         {
-            Console.WriteLine(entry);
+            Console.WriteLine($"\nHabit: {habit.Name} (ID: {habit.HabitID})");
+            Console.WriteLine($"Description: {habit.Description}");
+            Console.WriteLine($"Start Date: {habit.StartDate.ToShortDateString()}");
+
+            var dailyEntries = _dailyEntryService.GetAll().Where(de => de.Habit.HabitID == habit.HabitID).ToList();
+
+            if (dailyEntries.Count > 0)
+            {
+                foreach (var entry in dailyEntries)
+                {
+                    Console.WriteLine($"  - Date: {entry.EntryDate.ToShortDateString()}, Completed: {entry.IsCompleted}, ID: {entry.DailyEntryID}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("  No entries found for this habit.");
+            }
         }
     }
 
@@ -91,6 +115,14 @@ public class MenuService
         if (habit == null)
         {
             Console.WriteLine("Habit not found");
+            return;
+        }
+
+        var existingEntry = _dailyEntryService.GetAll()
+            .FirstOrDefault(de => de.Habit.HabitID == habitId && de.EntryDate.Date == DateTime.Now.Date);
+        if (existingEntry != null)
+        {
+            Console.WriteLine("A daily entry for this habit already exists for today.");
             return;
         }
 
@@ -122,7 +154,7 @@ public class MenuService
             return;
         }
 
-        if (ConfirmAction($"Are you sure you want to delete the {entry.DailyEntryID} entry for {entry.EntryDate}?"))
+        if (ConfirmAction($"Are you sure you want to delete the entry for {entry.Habit.Name} on {entry.EntryDate}?"))
         {
             _dailyEntryService.Delete(entry);
             Console.WriteLine("Daily entry deleted.");
@@ -133,7 +165,7 @@ public class MenuService
         }
     }
 
-    private void UpdateDailyEntry()
+    public void UpdateDailyEntry()
     {
         int entryId = GetDailyEntryIdFromUser();
         if (entryId == -1) return;
@@ -148,7 +180,7 @@ public class MenuService
         UpdateEntryDetails(entry);
     }
 
-    private void UpdateEntryDetails(DailyEntry entry)
+    public void UpdateEntryDetails(DailyEntry entry)
     {
         int habitId = GetHabitIdFromUser();
         if (habitId != -1)
@@ -181,7 +213,7 @@ public class MenuService
         Console.WriteLine("Daily entry updated.");
     }
 
-    private void InsertHabit()
+    public void InsertHabit()
     {
             Console.WriteLine("Enter Habit Name:");
             string name = Console.ReadLine();
@@ -195,6 +227,11 @@ public class MenuService
             Console.WriteLine("Enter Habit Description:");
             string description = Console.ReadLine();
 
+            if (string.IsNullOrWhiteSpace(description))
+            {
+                description = "No description provided.";
+            }
+
             Habit newHabit = new Habit
             {
                 Name = name,
@@ -206,7 +243,7 @@ public class MenuService
             Console.WriteLine("Habit added.");
     }
 
-    private void DeleteHabit()
+    public void DeleteHabit()
     {
         int habitId = GetHabitIdFromUser();
         if (habitId == -1) return;
@@ -229,7 +266,7 @@ public class MenuService
         }
     }
 
-    private void UpdateHabit()
+    public void UpdateHabit()
     {
         int habitId = GetHabitIdFromUser();
         if (habitId == -1) return;

@@ -20,7 +20,7 @@ public class ApplicationDbContext : DbContext
         {
             IConfigurationRoot config = new ConfigurationBuilder()
                                             .SetBasePath(Directory.GetCurrentDirectory())
-                                            .AddJsonFile("appsettings.json")
+                                            .AddJsonFile("C:/Users/Alex/Desktop/Revature/AlexSanchez/Project1/HabitTracker/appsettings.json")
                                             .Build();
             
             var connectionString = config.GetConnectionString("DefaultConnection");

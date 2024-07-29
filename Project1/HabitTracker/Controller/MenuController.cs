@@ -28,14 +28,20 @@ public class MenuController
 
     public void ExecuteAction()
     {
+        int action = getAction();
+        Console.Clear();
+        _menuService.ExecuteAction(action);
+    }
+
+    public int getAction()
+    {
         while (true)
         {
-
             string? input = Console.ReadLine();
 
             if (input != null && _menuService.isValidAction(input, out int choice))
-            { 
-                _menuService.ExecuteAction(choice);
+            {
+                return choice;
             }
 
             Console.WriteLine("Please input a number between 0-7.");
